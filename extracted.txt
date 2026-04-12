@@ -1,0 +1,82 @@
+ 
+  
+Auction Management Database   
+ 
+Name : Rohan Reshi  
+Prn : 202401040034 
+Batch : A2 
+Roll no : 21 
+ 
+ 
+ER-Diagram:   
+ 
+  
+     
+
+=======
+•   
+Auction Management System - Database Tables 
+ 1. USERS   
+• user_id (Primary Key)   
+• name   
+• email   
+• password   
+• phone   
+• address   
+• role (ADMIN / SELLER / BUYER)   
+rating   
+   
+2. CATEGORY   
+• category_id (Primary Key)   
+• name   
+• description   
+   
+3. AUCTION_EVENT   
+• auction_id (Primary Key)   
+• title   
+• description   
+• start_time   
+• end_time   
+• status (UPCOMING / ONGOING / COMPLETED)   
+• conducted_by (Foreign Key → USERS.user_id)   
+=======
+•   
+   
+4. ITEM   
+• item_id (Primary Key)   
+• name   
+• description   
+• base_price   
+• image_url   
+• status (AVAILABLE / SOLD / UNSOLD)   
+seller_id (Foreign Key → USERS.user_id)   
+• auction_id (Foreign Key → AUCTION_EVENT.auction_id)   
+• category_id (Foreign Key → CATEGORY .category_id)   
+   
+5. BID   
+• bid_id (Primary Key)   
+• bid_amount   
+• bid_time   
+• item_id (Foreign Key → ITEM.item_id)   
+• buyer_id (Foreign Key → USERS.user_id)   
+   
+6. PAYMENT   
+• payment_id (Primary Key)   
+• payment_date   
+• amount   
+• status (PENDING / SUCCESS / FAILED)   
+=======
+•   
+• item_id (Foreign Key → ITEM.item_id)   
+• buyer_id (Foreign Key → USERS.user_id)   
+   
+Relationship Summary   
+• One USER (ADMIN) conducts many AUCTION_EVENT   
+• One AUCTION_EVENT contains many ITEM   
+• One USER (SELLER) lists many ITEM   
+One CATEGORY groups many ITEM   
+• One ITEM receives many BID   
+• One USER (BUYER) places many BID   
+• One ITEM has one PAYMENT (after sold)   
+• One USER (BUYER) makes many PAYMENT   
+   

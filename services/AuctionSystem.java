@@ -55,8 +55,8 @@ public class AuctionSystem implements AuctionManager {
         AuctionEvent event = findAuctionById(auctionId);
         if (event == null) throw new AuctionException("Auction not found.");
         
-        event.setStatus("ACTIVE");
-        System.out.println("Auction approved and ACTIVE: " + event.getTitle());
+        event.setStatus("ONGOING");
+        System.out.println("Auction approved and ONGOING: " + event.getTitle());
     }
 
     @Override
@@ -69,16 +69,16 @@ public class AuctionSystem implements AuctionManager {
         AuctionEvent event = findAuctionById(auctionId);
         if (event == null) throw new AuctionException("Auction not found.");
 
-        event.setStatus("CLOSED");
-        System.out.println("Auction CLOSED: " + event.getTitle());
+        event.setStatus("COMPLETED");
+        System.out.println("Auction COMPLETED: " + event.getTitle());
 
         // Process winners for each item in the auction
         for (Item item : event.getItems()) {
             Bid winningBid = item.getHighestBid();
             if (winningBid != null) {
-                System.out.println("Winner for " + item.getName() + " is User ID " + winningBid.getUserId());
+                System.out.println("Winner for " + item.getName() + " is Buyer ID " + winningBid.getBuyerId());
                 // Automatically create a payment record
-                Payment payment = new Payment(payments.size() + 1, winningBid.getUserId(), winningBid.getId(), winningBid.getAmount());
+                Payment payment = new Payment(payments.size() + 1, winningBid.getBuyerId(), item.getId(), winningBid.getAmount());
                 processPayment(payment);
             } else {
                 System.out.println("No bids for " + item.getName());
@@ -126,7 +126,7 @@ public class AuctionSystem implements AuctionManager {
             throw new AuctionException("Invalid payment details.");
         }
         payments.add(payment);
-        System.out.println("Payment processed: $" + payment.getAmount() + " for User ID " + payment.getUserId());
+        System.out.println("Payment processed: $" + payment.getAmount() + " for Buyer ID " + payment.getBuyerId());
     }
 
     @Override
@@ -165,7 +165,7 @@ public class AuctionSystem implements AuctionManager {
     public List<Payment> getPaymentHistory(int userId) {
         List<Payment> history = new ArrayList<>();
         for (Payment p : payments) {
-            if (p.getUserId() == userId) history.add(p);
+            if (p.getBuyerId() == userId) history.add(p);
         }
         return history;
     }
@@ -182,14 +182,14 @@ public class AuctionSystem implements AuctionManager {
         if (item == null) throw new AuctionException("Item not found.");
         
         AuctionEvent event = findAuctionById(item.getAuctionId());
-        if (event == null || !"CLOSED".equals(event.getStatus())) {
+        if (event == null || !"COMPLETED".equals(event.getStatus())) {
             throw new AuctionException("Auction is still ongoing or pending.");
         }
 
         Bid winningBid = item.getHighestBid();
         if (winningBid == null) return null;
 
-        return findUserById(winningBid.getUserId());
+        return findUserById(winningBid.getBuyerId());
     }
 
     private Item findItemById(int id) {

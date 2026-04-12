@@ -41,13 +41,21 @@ public class LoginPage extends JPanel {
             if (system.login(email, pwd)) {
                 // Determine user (hacky way since AuctionSystem login returns boolean only currently)
                 // In real app, system.login() should return User
-                User loggedIn = new User(1, email, email, pwd); 
+                User loggedIn = new User(1, email, email, pwd, "", "", "BUYER"); 
                 frame.setCurrentUser(loggedIn);
                 frame.navigateTo("HOME");
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid credentials", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+
+        JButton signupBtn = new JButton("Don't have an account? Sign up");
+        signupBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        signupBtn.setForeground(Theme.PRIMARY_COLOR);
+        signupBtn.setContentAreaFilled(false);
+        signupBtn.setBorderPainted(false);
+        signupBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        signupBtn.addActionListener(e -> frame.navigateTo("SIGNUP"));
 
         loginBox.add(titleLabel);
         loginBox.add(Box.createRigidArea(new Dimension(0, 30)));
@@ -60,6 +68,8 @@ public class LoginPage extends JPanel {
         loginBox.add(passField);
         loginBox.add(Box.createRigidArea(new Dimension(0, 30)));
         loginBox.add(loginBtn);
+        loginBox.add(Box.createRigidArea(new Dimension(0, 10)));
+        loginBox.add(signupBtn);
 
         add(loginBox);
     }

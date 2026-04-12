@@ -24,6 +24,7 @@ public class MainFrame extends JFrame {
 
         // Initialize pages
         mainPanel.add(new LoginPage(this, system), "LOGIN");
+        mainPanel.add(new SignupPage(this, system), "SIGNUP");
         mainPanel.add(new HomePage(this, system), "HOME");
         mainPanel.add(new BidPage(this, system), "BID");
 

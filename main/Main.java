@@ -19,9 +19,9 @@ public class Main {
         system.addCategory(electronics);
 
         // 2. Register Users and Admins
-        User user1 = new User(1, "Alice", "alice@example.com", "pass123");
-        User user2 = new User(3, "Charlie", "charlie@example.com", "pass456");
-        Admin admin1 = new Admin(2, "Bob (Admin)", "admin@auction.com", "admin789");
+        User user1 = new User(1, "Alice", "alice@example.com", "pass123", "111", "addr1", "BUYER");
+        User user2 = new User(3, "Charlie", "charlie@example.com", "pass456", "222", "addr2", "SELLER");
+        Admin admin1 = new Admin(2, "Bob (Admin)", "admin@auction.com", "admin789", "333", "addr3");
 
         system.registerUser(user1);
         system.registerUser(user2);
@@ -34,12 +34,12 @@ public class Main {
 
         try {
             // 4. Create and Approve Auction
-            AuctionEvent event = new AuctionEvent(1, "Vintage Tech Auction", new Date(System.currentTimeMillis() - 1000), new Date(System.currentTimeMillis() + 3600000));
+            AuctionEvent event = new AuctionEvent(1, "Vintage Tech Auction", "Vintage tech", new Date(System.currentTimeMillis() - 1000), new Date(System.currentTimeMillis() + 3600000), 2);
             system.createAuction(event);
             system.approveAuction(1, 2); // Admin Bob approves auction 1
 
             // 5. List Items
-            Item item1 = new Item(1, "Macintosh 128K", "Original 1984 Macintosh", 500.0, 1, 1);
+            Item item1 = new Item(1, "Macintosh 128K", "Original 1984 Macintosh", 500.0, "img", 3, 1, 1);
             system.listItem(item1);
 
             // 6. Bidding process
