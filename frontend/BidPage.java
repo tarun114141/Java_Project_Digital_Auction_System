@@ -1,27 +1,30 @@
 package frontend;
 
-import com.auction.services.AuctionSystem;
+import com.auction.dao.ItemDao;
+import com.auction.dao.BidDao;
 import com.auction.entities.Item;
 import com.auction.entities.Bid;
-import com.auction.exceptions.AuctionException;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.List;
 
 public class BidPage extends JPanel {
     private MainFrame frame;
-    private AuctionSystem system;
-    private int currentItemId;
+    private int currentItemId = -1;
 
     private JLabel itemName;
     private JLabel itemDesc;
     private JLabel currentV;
     private JTextField bidAmountField;
+    private JPanel bidHistoryPanel;
 
-    public BidPage(MainFrame frame, AuctionSystem system) {
+    private final ItemDao itemDao = new ItemDao();
+    private final BidDao  bidDao  = new BidDao();
+
+    public BidPage(MainFrame frame) {
         this.frame = frame;
-        this.system = system;
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND);
 
@@ -42,11 +45,11 @@ public class BidPage extends JPanel {
 
         add(header, BorderLayout.NORTH);
 
-        // Content
+        // Main content
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(Theme.CARD_BG);
-        contentPanel.setBorder(new EmptyBorder(40, 40, 40, 40));
+        contentPanel.setBorder(new EmptyBorder(40, 60, 40, 60));
 
         itemName = new JLabel("Item Name");
         itemName.setFont(new Font("Segoe UI", Font.BOLD, 24));
@@ -62,17 +65,27 @@ public class BidPage extends JPanel {
         currentV.setForeground(Theme.SECONDARY_COLOR);
         currentV.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        // Bid input row
         JPanel bidPanel = new JPanel();
         bidPanel.setBackground(Theme.CARD_BG);
         bidPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
-
         bidPanel.add(new JLabel("Your Bid ($):"));
         bidAmountField = new JTextField(10);
+        bidAmountField.setFont(Theme.REGULAR_FONT);
         bidPanel.add(bidAmountField);
 
         JButton placeBidBtn = Theme.createButton("Submit Bid", Theme.PRIMARY_COLOR);
         placeBidBtn.addActionListener(e -> submitBid());
         bidPanel.add(placeBidBtn);
+
+        // Bid history panel
+        bidHistoryPanel = new JPanel();
+        bidHistoryPanel.setLayout(new BoxLayout(bidHistoryPanel, BoxLayout.Y_AXIS));
+        bidHistoryPanel.setBackground(Theme.CARD_BG);
+
+        JLabel historyTitle = new JLabel("Recent Bids");
+        historyTitle.setFont(Theme.HEADER_FONT);
+        historyTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         contentPanel.add(itemName);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -81,50 +94,108 @@ public class BidPage extends JPanel {
         contentPanel.add(currentV);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
         contentPanel.add(bidPanel);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        contentPanel.add(historyTitle);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        contentPanel.add(bidHistoryPanel);
 
         JPanel centerWrapper = new JPanel(new GridBagLayout());
         centerWrapper.setBackground(Theme.BACKGROUND);
         centerWrapper.add(contentPanel);
 
-        add(centerWrapper, BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(centerWrapper);
+        scroll.setBorder(null);
+        add(scroll, BorderLayout.CENTER);
     }
 
     public void loadItem(int itemId) {
         this.currentItemId = itemId;
+
+        // Load item from DB
+        List<Item> all = itemDao.getAllAvailableItems();
         Item item = null;
-        for (Item i : system.browseItems()) {
-            if (i.getId() == itemId) {
-                item = i;
-                break;
-            }
+        for (Item i : all) {
+            if (i.getId() == itemId) { item = i; break; }
         }
+
         if (item != null) {
             itemName.setText(item.getName());
             itemDesc.setText("<html><center>" + item.getDescription() + "</center></html>");
-            
-            Bid highest = item.getHighestBid();
+
+            // Get highest bid from DB
+            Bid highest = bidDao.getHighestBid(itemId);
             double minPrice = (highest != null) ? highest.getAmount() : item.getStartingPrice();
-            currentV.setText("Current Price: $" + minPrice);
-            bidAmountField.setText(String.valueOf(minPrice + 10)); // Suggest a slightly higher bid
+            currentV.setText("Current Price: $" + String.format("%.2f", minPrice));
+            bidAmountField.setText(String.format("%.2f", minPrice + 10));
+
+            // Load bid history
+            refreshBidHistory(itemId);
         }
     }
 
+    private void refreshBidHistory(int itemId) {
+        bidHistoryPanel.removeAll();
+        List<Bid> bids = bidDao.getBidsForItem(itemId);
+        if (bids.isEmpty()) {
+            JLabel none = new JLabel("No bids yet. Be the first!");
+            none.setForeground(Theme.TEXT_LIGHT);
+            none.setAlignmentX(Component.CENTER_ALIGNMENT);
+            bidHistoryPanel.add(none);
+        } else {
+            for (Bid b : bids) {
+                JLabel row = new JLabel("Buyer ID " + b.getBuyerId() + "  →  $" + String.format("%.2f", b.getAmount()));
+                row.setFont(Theme.REGULAR_FONT);
+                row.setAlignmentX(Component.CENTER_ALIGNMENT);
+                bidHistoryPanel.add(row);
+                bidHistoryPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+            }
+        }
+        bidHistoryPanel.revalidate();
+        bidHistoryPanel.repaint();
+    }
+
     private void submitBid() {
+        if (currentItemId == -1) return;
+
+        String text = bidAmountField.getText().trim();
+        if (text.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a bid amount.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         try {
-            double amount = Double.parseDouble(bidAmountField.getText());
-            int userId = frame.getCurrentUser() != null ? frame.getCurrentUser().getId() : 1; 
+            double amount = Double.parseDouble(text);
+            int userId = (frame.getCurrentUser() != null) ? frame.getCurrentUser().getId() : -1;
 
-            // Create a fake bid ID (in real db it would autogenerate)
-            int bidId = (int) (Math.random() * 1000);
-            Bid bid = new Bid(bidId, userId, currentItemId, amount);
+            if (userId == -1) {
+                JOptionPane.showMessageDialog(this, "Please log in to place a bid.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-            system.placeBid(bid);
-            JOptionPane.showMessageDialog(this, "Bid Placed Successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-            loadItem(currentItemId); // refresh
+            // Validate against current highest bid
+            Bid highest = bidDao.getHighestBid(currentItemId);
+            double minPrice = (highest != null) ? highest.getAmount() : 0;
+
+            if (amount <= minPrice) {
+                JOptionPane.showMessageDialog(this,
+                    "Your bid must be higher than the current price: $" + String.format("%.2f", minPrice),
+                    "Low Bid", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Save bid to Oracle DB
+            Bid bid = new Bid(0, userId, currentItemId, amount);
+            boolean success = bidDao.placeBid(bid);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Bid placed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                loadItem(currentItemId); // refresh UI
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to place bid. Try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
-        } catch (AuctionException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

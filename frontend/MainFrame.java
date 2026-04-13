@@ -1,6 +1,6 @@
 package frontend;
 
-import com.auction.services.AuctionSystem;
+import com.auction.core.DatabaseConnection;
 import com.auction.entities.User;
 
 import javax.swing.*;
@@ -9,11 +9,9 @@ import java.awt.*;
 public class MainFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
-    private AuctionSystem auctionSystem;
     private User currentUser;
 
-    public MainFrame(AuctionSystem system) {
-        this.auctionSystem = system;
+    public MainFrame() {
         setTitle("Digital Auction System");
         setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -22,20 +20,26 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // Initialize pages
-        mainPanel.add(new LoginPage(this, system), "LOGIN");
-        mainPanel.add(new SignupPage(this, system), "SIGNUP");
-        mainPanel.add(new HomePage(this, system), "HOME");
-        mainPanel.add(new BidPage(this, system), "BID");
+        // Initialize pages - no AuctionSystem needed, DAOs handle DB directly
+        mainPanel.add(new LoginPage(this),  "LOGIN");
+        mainPanel.add(new SignupPage(this), "SIGNUP");
+        mainPanel.add(new HomePage(this),   "HOME");
+        mainPanel.add(new BidPage(this),    "BID");
 
         add(mainPanel);
+
+        // Close DB connection cleanly when window closes
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                DatabaseConnection.closeConnection();
+            }
+        });
     }
 
     public void navigateTo(String pageName) {
         if (pageName.equals("HOME")) {
-            // refresh home page items
-            Component[] comps = mainPanel.getComponents();
-            for (Component c : comps) {
+            for (Component c : mainPanel.getComponents()) {
                 if (c instanceof HomePage) {
                     ((HomePage) c).refreshData();
                 }
@@ -43,10 +47,9 @@ public class MainFrame extends JFrame {
         }
         cardLayout.show(mainPanel, pageName);
     }
-    
+
     public void navigateToBid(int itemId) {
-        Component[] comps = mainPanel.getComponents();
-        for (Component c : comps) {
+        for (Component c : mainPanel.getComponents()) {
             if (c instanceof BidPage) {
                 ((BidPage) c).loadItem(itemId);
             }

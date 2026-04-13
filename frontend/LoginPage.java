@@ -1,6 +1,6 @@
 package frontend;
 
-import com.auction.services.AuctionSystem;
+import com.auction.dao.UserDao;
 import com.auction.entities.User;
 
 import javax.swing.*;
@@ -10,7 +10,7 @@ public class LoginPage extends JPanel {
     private JTextField emailField;
     private JPasswordField passField;
 
-    public LoginPage(MainFrame frame, AuctionSystem system) {
+    public LoginPage(MainFrame frame) {
         setBackground(Theme.BACKGROUND);
         setLayout(new GridBagLayout());
 
@@ -36,16 +36,23 @@ public class LoginPage extends JPanel {
         JButton loginBtn = Theme.createButton("Login", Theme.PRIMARY_COLOR);
         loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         loginBtn.addActionListener(e -> {
-            String email = emailField.getText();
+            String email = emailField.getText().trim();
             String pwd = new String(passField.getPassword());
-            if (system.login(email, pwd)) {
-                // Determine user (hacky way since AuctionSystem login returns boolean only currently)
-                // In real app, system.login() should return User
-                User loggedIn = new User(1, email, email, pwd, "", "", "BUYER"); 
+
+            if (email.isEmpty() || pwd.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter email and password.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Real DB login via UserDao
+            UserDao userDao = new UserDao();
+            User loggedIn = userDao.login(email, pwd);
+
+            if (loggedIn != null) {
                 frame.setCurrentUser(loggedIn);
                 frame.navigateTo("HOME");
             } else {
-                JOptionPane.showMessageDialog(this, "Invalid credentials", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid email or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }
         });
 

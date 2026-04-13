@@ -1,6 +1,6 @@
 package frontend;
 
-import com.auction.services.AuctionSystem;
+import com.auction.dao.ItemDao;
 import com.auction.entities.Item;
 
 import javax.swing.*;
@@ -10,12 +10,11 @@ import java.util.List;
 
 public class HomePage extends JPanel {
     private MainFrame frame;
-    private AuctionSystem system;
     private JPanel gridPanel;
+    private final ItemDao itemDao = new ItemDao();
 
-    public HomePage(MainFrame frame, AuctionSystem system) {
+    public HomePage(MainFrame frame) {
         this.frame = frame;
-        this.system = system;
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND);
 
@@ -28,6 +27,12 @@ public class HomePage extends JPanel {
         title.setFont(Theme.TITLE_FONT);
         title.setForeground(Color.WHITE);
         header.add(title, BorderLayout.WEST);
+
+        // Show logged-in user greeting
+        JLabel userLabel = new JLabel("");
+        userLabel.setFont(Theme.REGULAR_FONT);
+        userLabel.setForeground(Color.WHITE);
+        header.add(userLabel, BorderLayout.CENTER);
 
         JButton logoutBtn = Theme.createButton("Logout", new Color(220, 38, 38));
         logoutBtn.addActionListener(e -> frame.navigateTo("LOGIN"));
@@ -49,38 +54,59 @@ public class HomePage extends JPanel {
 
     public void refreshData() {
         gridPanel.removeAll();
-        List<Item> items = system.browseItems();
-        
-        for (Item item : items) {
-            JPanel card = new JPanel();
-            card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-            card.setBackground(Theme.CARD_BG);
-            card.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(229, 231, 235), 1),
-                    new EmptyBorder(15, 15, 15, 15)
-            ));
 
-            JLabel name = new JLabel(item.getName());
-            name.setFont(Theme.HEADER_FONT);
-            
-            JLabel price = new JLabel("Start Price: $" + item.getStartingPrice());
-            price.setFont(Theme.REGULAR_FONT);
-            price.setForeground(Theme.SECONDARY_COLOR);
+        // Load items from Oracle DB via ItemDao
+        List<Item> items = itemDao.getAllAvailableItems();
 
-            JButton bidBtn = Theme.createButton("View / Bid", Theme.PRIMARY_COLOR);
-            bidBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
-            bidBtn.addActionListener(e -> frame.navigateToBid(item.getId()));
-
-            card.add(name);
-            card.add(Box.createRigidArea(new Dimension(0, 10)));
-            card.add(price);
-            card.add(Box.createRigidArea(new Dimension(0, 15)));
-            card.add(bidBtn);
-
-            gridPanel.add(card);
+        if (items.isEmpty()) {
+            JLabel empty = new JLabel("No items available right now.", SwingConstants.CENTER);
+            empty.setFont(Theme.HEADER_FONT);
+            empty.setForeground(Theme.TEXT_LIGHT);
+            gridPanel.setLayout(new BorderLayout());
+            gridPanel.add(empty, BorderLayout.CENTER);
+        } else {
+            gridPanel.setLayout(new GridLayout(0, 3, 20, 20));
+            for (Item item : items) {
+                gridPanel.add(createItemCard(item));
+            }
         }
-        
+
         gridPanel.revalidate();
         gridPanel.repaint();
+    }
+
+    private JPanel createItemCard(Item item) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(Theme.CARD_BG);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(229, 231, 235), 1),
+                new EmptyBorder(15, 15, 15, 15)
+        ));
+
+        JLabel name = new JLabel(item.getName());
+        name.setFont(Theme.HEADER_FONT);
+
+        JLabel desc = new JLabel("<html><p style='width:150px'>" + item.getDescription() + "</p></html>");
+        desc.setFont(Theme.REGULAR_FONT);
+        desc.setForeground(Theme.TEXT_LIGHT);
+
+        JLabel price = new JLabel("Starting Price: $" + item.getStartingPrice());
+        price.setFont(Theme.REGULAR_FONT);
+        price.setForeground(Theme.SECONDARY_COLOR);
+
+        JButton bidBtn = Theme.createButton("View / Bid", Theme.PRIMARY_COLOR);
+        bidBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        bidBtn.addActionListener(e -> frame.navigateToBid(item.getId()));
+
+        card.add(name);
+        card.add(Box.createRigidArea(new Dimension(0, 8)));
+        card.add(desc);
+        card.add(Box.createRigidArea(new Dimension(0, 8)));
+        card.add(price);
+        card.add(Box.createRigidArea(new Dimension(0, 15)));
+        card.add(bidBtn);
+
+        return card;
     }
 }
