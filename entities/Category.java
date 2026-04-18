@@ -1,6 +1,6 @@
-package com.auction.entities;
+package entities;
 
-import com.auction.core.BaseEntity;
+import core.BaseEntity;
 
 /**
  * Represents a category for items.
@@ -22,4 +22,9 @@ public class Category extends BaseEntity {
 
     public String getName() { return name; }
     public String getDescription() { return description; }
+    
+    @Override
+    public String toString() {
+        return name;
+    }
 }

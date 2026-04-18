@@ -1,6 +1,6 @@
-package com.auction.entities;
+package entities;
 
-import com.auction.core.BaseEntity;
+import core.BaseEntity;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

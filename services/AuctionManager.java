@@ -1,7 +1,7 @@
-package com.auction.services;
+package services;
 
-import com.auction.entities.*;
-import com.auction.exceptions.*;
+import entities.*;
+import exceptions.*;
 import java.util.List;
 
 /**

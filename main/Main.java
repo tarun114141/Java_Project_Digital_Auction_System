@@ -1,8 +1,8 @@
-package com.auction.main;
+package main;
 
-import com.auction.entities.*;
-import com.auction.services.*;
-import com.auction.exceptions.*;
+import entities.*;
+import services.*;
+import exceptions.*;
 import java.util.Date;
 
 /**

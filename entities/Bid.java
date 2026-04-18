@@ -1,6 +1,6 @@
-package com.auction.entities;
+package entities;
 
-import com.auction.core.BaseEntity;
+import core.BaseEntity;
 import java.util.Date;
 
 /**

@@ -1,7 +1,7 @@
-package com.auction.dao;
+package dao;
 
-import com.auction.core.DatabaseConnection;
-import com.auction.entities.Item;
+import core.DatabaseConnection;
+import entities.Item;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -50,6 +50,21 @@ public class ItemDao {
         return items;
     }
 
+    public List<Item> getAllItems() {
+        List<Item> items = new ArrayList<>();
+        String sql = "SELECT * FROM ITEM";
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) items.add(mapRow(rs));
+
+        } catch (SQLException e) {
+            System.err.println("[ItemDao] Error fetching all items: " + e.getMessage());
+        }
+        return items;
+    }
+
     public List<Item> searchItems(String keyword) {
         List<Item> items = new ArrayList<>();
         String sql = "SELECT * FROM ITEM WHERE LOWER(name) LIKE ? OR LOWER(description) LIKE ?";
@@ -84,6 +99,22 @@ public class ItemDao {
         return items;
     }
 
+    public List<Item> getItemsBySeller(int sellerId) {
+        List<Item> items = new ArrayList<>();
+        String sql = "SELECT * FROM ITEM WHERE seller_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, sellerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) items.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("[ItemDao] Error fetching items by seller: " + e.getMessage());
+        }
+        return items;
+    }
+
     public boolean updateItemStatus(int itemId, String status) {
         String sql = "UPDATE ITEM SET status = ? WHERE item_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -95,6 +126,54 @@ public class ItemDao {
             System.err.println("[ItemDao] Error updating item status: " + e.getMessage());
             return false;
         }
+    }
+
+    public boolean deleteItem(int itemId) {
+        String sql = "DELETE FROM ITEM WHERE item_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, itemId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[ItemDao] Error deleting item: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public List<Item> getFilteredAvailableItems(String keyword, int categoryId) {
+        List<Item> items = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM ITEM WHERE status = 'AVAILABLE'");
+        
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        boolean hasCategory = categoryId > 0;
+        
+        if (hasKeyword) {
+            sql.append(" AND (LOWER(name) LIKE ? OR LOWER(description) LIKE ?)");
+        }
+        if (hasCategory) {
+            sql.append(" AND category_id = ?");
+        }
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+             
+            int paramIdx = 1;
+            if (hasKeyword) {
+                String kw = "%" + keyword.toLowerCase() + "%";
+                ps.setString(paramIdx++, kw);
+                ps.setString(paramIdx++, kw);
+            }
+            if (hasCategory) {
+                ps.setInt(paramIdx++, categoryId);
+            }
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) items.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("[ItemDao] Error fetching filtered items: " + e.getMessage());
+        }
+        return items;
     }
 
     private Item mapRow(ResultSet rs) throws SQLException {

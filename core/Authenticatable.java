@@ -1,4 +1,4 @@
-package com.auction.core;
+package core;
 
 /**
  * Interface for entities that require authentication.

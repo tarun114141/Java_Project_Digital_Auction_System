@@ -1,4 +1,4 @@
-package com.auction.entities;
+package entities;
 
 /**
  * Represents an Admin in the system.

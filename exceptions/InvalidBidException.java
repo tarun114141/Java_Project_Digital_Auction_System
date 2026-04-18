@@ -1,4 +1,4 @@
-package com.auction.exceptions;
+package exceptions;
 
 /**
  * Exception thrown when a bid is invalid.

@@ -1,13 +1,16 @@
 package frontend;
 
-import com.auction.dao.ItemDao;
-import com.auction.dao.BidDao;
-import com.auction.entities.Item;
-import com.auction.entities.Bid;
+import dao.AuctionDao;
+import dao.BidDao;
+import dao.ItemDao;
+import entities.AuctionEvent;
+import entities.Bid;
+import entities.Item;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class BidPage extends JPanel {
@@ -19,9 +22,12 @@ public class BidPage extends JPanel {
     private JLabel currentV;
     private JTextField bidAmountField;
     private JPanel bidHistoryPanel;
+    private JLabel timelineLabel;
+    private JButton placeBidBtn;
 
     private final ItemDao itemDao = new ItemDao();
     private final BidDao  bidDao  = new BidDao();
+    private final AuctionDao auctionDao = new AuctionDao();
 
     public BidPage(MainFrame frame) {
         this.frame = frame;
@@ -74,7 +80,7 @@ public class BidPage extends JPanel {
         bidAmountField.setFont(Theme.REGULAR_FONT);
         bidPanel.add(bidAmountField);
 
-        JButton placeBidBtn = Theme.createButton("Submit Bid", Theme.PRIMARY_COLOR);
+        placeBidBtn = Theme.createButton("Submit Bid", Theme.PRIMARY_COLOR);
         placeBidBtn.addActionListener(e -> submitBid());
         bidPanel.add(placeBidBtn);
 
@@ -86,10 +92,17 @@ public class BidPage extends JPanel {
         JLabel historyTitle = new JLabel("Recent Bids");
         historyTitle.setFont(Theme.HEADER_FONT);
         historyTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        timelineLabel = new JLabel("Time left: Calculating...");
+        timelineLabel.setFont(Theme.REGULAR_FONT);
+        timelineLabel.setForeground(Theme.TEXT_LIGHT);
+        timelineLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         contentPanel.add(itemName);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         contentPanel.add(itemDesc);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        contentPanel.add(timelineLabel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         contentPanel.add(currentV);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
@@ -128,6 +141,32 @@ public class BidPage extends JPanel {
             currentV.setText("Current Price: $" + String.format("%.2f", minPrice));
             bidAmountField.setText(String.format("%.2f", minPrice + 10));
 
+            // Setup timeline and check auction status
+            AuctionEvent auction = auctionDao.findById(item.getAuctionId());
+            if (auction != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm");
+                if ("COMPLETED".equals(auction.getStatus()) || (!auction.isActive() && auction.getEndTime().before(new java.util.Date()))) {
+                    timelineLabel.setText("Auction Closed (Ended on " + sdf.format(auction.getEndTime()) + ")");
+                    timelineLabel.setForeground(new Color(220, 38, 38)); // Red color
+                    placeBidBtn.setEnabled(false);
+                    bidAmountField.setEnabled(false);
+                } else if ("UPCOMING".equals(auction.getStatus()) || auction.getStartTime().after(new java.util.Date())) {
+                    timelineLabel.setText("Auction Starts: " + sdf.format(auction.getStartTime()));
+                    timelineLabel.setForeground(new Color(234, 179, 8)); // Yellow/Orange
+                    placeBidBtn.setEnabled(false);
+                    bidAmountField.setEnabled(false);
+                } else {
+                    timelineLabel.setText("Bidding closes: " + sdf.format(auction.getEndTime()));
+                    timelineLabel.setForeground(new Color(34, 197, 94)); // Green
+                    placeBidBtn.setEnabled(true);
+                    bidAmountField.setEnabled(true);
+                }
+            } else {
+                timelineLabel.setText("No auction scheduled.");
+                placeBidBtn.setEnabled(false);
+                bidAmountField.setEnabled(false);
+            }
+
             // Load bid history
             refreshBidHistory(itemId);
         }
@@ -143,7 +182,7 @@ public class BidPage extends JPanel {
             bidHistoryPanel.add(none);
         } else {
             for (Bid b : bids) {
-                JLabel row = new JLabel("Buyer ID " + b.getBuyerId() + "  →  $" + String.format("%.2f", b.getAmount()));
+                JLabel row = new JLabel("Buyer ID " + b.getBuyerId() + "  â†’  $" + String.format("%.2f", b.getAmount()));
                 row.setFont(Theme.REGULAR_FONT);
                 row.setAlignmentX(Component.CENTER_ALIGNMENT);
                 bidHistoryPanel.add(row);

@@ -1,7 +1,7 @@
-package com.auction.dao;
+package dao;
 
-import com.auction.core.DatabaseConnection;
-import com.auction.entities.Bid;
+import core.DatabaseConnection;
+import entities.Bid;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ public class BidDao {
      * Returns the highest bid for a given item.
      */
     public Bid getHighestBid(int itemId) {
-        String sql = "SELECT * FROM BID WHERE item_id = ? ORDER BY bid_amount DESC FETCH FIRST 1 ROW ONLY";
+        String sql = "SELECT * FROM (SELECT * FROM BID WHERE item_id = ? ORDER BY bid_amount DESC) WHERE ROWNUM = 1";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -78,6 +78,29 @@ public class BidDao {
             System.err.println("[BidDao] Error fetching buyer bids: " + e.getMessage());
         }
         return bids;
+    }
+
+    public List<String> getOutbidItemNames(int buyerId) {
+        List<String> outbidItems = new ArrayList<>();
+        String sql = "SELECT i.name " +
+                     "FROM ITEM i " +
+                     "WHERE i.status = 'AVAILABLE' " +
+                     "  AND EXISTS (SELECT 1 FROM BID WHERE item_id = i.item_id AND buyer_id = ?) " +
+                     "  AND (SELECT buyer_id FROM (SELECT buyer_id, bid_amount FROM BID WHERE item_id = i.item_id ORDER BY bid_amount DESC) WHERE ROWNUM = 1) != ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, buyerId);
+            ps.setInt(2, buyerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    outbidItems.add(rs.getString("name"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[BidDao] Error fetching outbid items: " + e.getMessage());
+        }
+        return outbidItems;
     }
 
     private Bid mapRow(ResultSet rs) throws SQLException {

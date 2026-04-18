@@ -1,4 +1,4 @@
-package com.auction.core;
+package core;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,7 +12,7 @@ public class DatabaseConnection {
 
     // --- UPDATE THESE TO MATCH YOUR ORACLE SETUP ---
     private static final String URL = "jdbc:oracle:thin:@localhost:1521/XE";
-    private static final String USERNAME = "auction";
+    private static final String USERNAME = "AUCTION";
     private static final String PASSWORD = "auction123";
     // ------------------------------------------------
 

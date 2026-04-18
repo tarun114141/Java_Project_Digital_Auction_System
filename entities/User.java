@@ -1,7 +1,7 @@
-package com.auction.entities;
+package entities;
 
-import com.auction.core.BaseEntity;
-import com.auction.core.Authenticatable;
+import core.BaseEntity;
+import core.Authenticatable;
 
 /**
  * Represents a User in the system.

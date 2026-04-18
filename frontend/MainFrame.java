@@ -1,7 +1,7 @@
 package frontend;
 
-import com.auction.core.DatabaseConnection;
-import com.auction.entities.User;
+import core.DatabaseConnection;
+import entities.User;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,6 +25,9 @@ public class MainFrame extends JFrame {
         mainPanel.add(new SignupPage(this), "SIGNUP");
         mainPanel.add(new HomePage(this),   "HOME");
         mainPanel.add(new BidPage(this),    "BID");
+        mainPanel.add(new WinnersPage(this),"WINNERS");
+        mainPanel.add(new PaymentsPage(this),"PAYMENTS");
+        mainPanel.add(new AdminPage(this),  "ADMIN");
 
         add(mainPanel);
 
@@ -42,6 +45,24 @@ public class MainFrame extends JFrame {
             for (Component c : mainPanel.getComponents()) {
                 if (c instanceof HomePage) {
                     ((HomePage) c).refreshData();
+                }
+            }
+        } else if (pageName.equals("WINNERS")) {
+            for (Component c : mainPanel.getComponents()) {
+                if (c instanceof WinnersPage) {
+                    ((WinnersPage) c).refreshData();
+                }
+            }
+        } else if (pageName.equals("PAYMENTS")) {
+            for (Component c : mainPanel.getComponents()) {
+                if (c instanceof PaymentsPage) {
+                    ((PaymentsPage) c).refreshData();
+                }
+            }
+        } else if (pageName.equals("ADMIN")) {
+            for (Component c : mainPanel.getComponents()) {
+                if (c instanceof AdminPage) {
+                    ((AdminPage) c).refreshData();
                 }
             }
         }

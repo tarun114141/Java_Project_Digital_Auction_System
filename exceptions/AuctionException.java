@@ -1,4 +1,4 @@
-package com.auction.exceptions;
+package exceptions;
 
 /**
  * Custom exception for auction-related errors.

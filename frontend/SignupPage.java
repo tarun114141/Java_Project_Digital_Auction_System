@@ -1,7 +1,7 @@
 package frontend;
 
-import com.auction.dao.UserDao;
-import com.auction.entities.User;
+import dao.UserDao;
+import entities.User;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,7 +1,7 @@
-package com.auction.dao;
+package dao;
 
-import com.auction.core.DatabaseConnection;
-import com.auction.entities.Payment;
+import core.DatabaseConnection;
+import entities.Payment;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -58,6 +58,21 @@ public class PaymentDao {
             System.err.println("[PaymentDao] Error fetching payments: " + e.getMessage());
         }
         return list;
+    }
+
+    public Payment getPaymentByItem(int itemId) {
+        String sql = "SELECT * FROM PAYMENT WHERE item_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, itemId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("[PaymentDao] Error fetching payment by item: " + e.getMessage());
+        }
+        return null;
     }
 
     private Payment mapRow(ResultSet rs) throws SQLException {

@@ -1,4 +1,4 @@
-package com.auction.core;
+package core;
 
 import java.util.Date;
 

@@ -1,7 +1,7 @@
 package frontend;
 
-import com.auction.dao.UserDao;
-import com.auction.entities.User;
+import dao.UserDao;
+import entities.User;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,7 +50,11 @@ public class LoginPage extends JPanel {
 
             if (loggedIn != null) {
                 frame.setCurrentUser(loggedIn);
-                frame.navigateTo("HOME");
+                if ("ADMIN".equalsIgnoreCase(loggedIn.getRole())) {
+                    frame.navigateTo("ADMIN");
+                } else {
+                    frame.navigateTo("HOME");
+                }
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid email or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
             }

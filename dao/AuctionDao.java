@@ -1,7 +1,7 @@
-package com.auction.dao;
+package dao;
 
-import com.auction.core.DatabaseConnection;
-import com.auction.entities.AuctionEvent;
+import core.DatabaseConnection;
+import entities.AuctionEvent;
 
 import java.sql.*;
 import java.util.ArrayList;

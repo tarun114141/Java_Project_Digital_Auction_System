@@ -1,0 +1,71 @@
+Project Details: Digital Auction System
+
+=========================================
+1. PAGES AND FEATURES
+=========================================
+
+1. MainFrame (Main Window)
+   - Feature: Manages navigation and routing between all different pages using a CardLayout.
+   - Feature: Stores system-wide state, primarily the details of the currently logged-in user.
+   - Feature: Securely manages database connections and closes them upon window exit.
+
+2. LoginPage
+   - Feature: Authenticates users using their email and password.
+   - Feature: Role-based redirection logic (Admin users are redirected to the Admin Dashboard; Buyers and Sellers are redirected to the Home Page).
+   - Feature: Redirects users lacking accounts to the SignupPage.
+
+3. SignupPage
+   - Feature: Provides a registration form capturing Full Name, Email Address, Password, Phone Number, and Address.
+   - Feature: Dedicated role selection dropdown assigning roles strictly to either a 'BUYER' or 'SELLER'.
+   - Feature: Input validation and database integration to prevent duplicate email registrations.
+
+4. HomePage
+   - Feature (For Buyers): Displays a grid of all available items up for auction alongside their timeline (upcoming/closing).
+   - Feature (For Buyers): 'Search & Filter' tool allowing users to find specific items by text keywords or by a dynamically populated category dropdown menu (Electronics, Fashion, Collectibles, etc.).
+   - Feature (For Buyers): 'Real-Time Outbid Notifications' which scan the database on load and display a vivid red warning banner explicitly detailing any items where the user's active bid has recently been surpassed.
+   - Feature (For Sellers): Displays a personalized dashboard showing only the items they are auctioning off.
+   - Feature: 'Add Item' modal for sellers to create a new auction listing (Item Name, Description, Starting Price, Image URL).
+   - Feature: 'Delete Item' function for sellers to remove their un-bid properties.
+   - Feature: Central navigation hub to internal functions like 'Winners' and 'Payments'.
+
+5. BidPage
+   - Feature: Showcases detailed insight for a selected single item.
+   - Feature: Real-time calculation of current highest bid relative to the item's minimum base price.
+   - Feature: Form interface preventing invalid submissions and placing a validated bid into the database.
+   - Feature: 'Bid History' module presenting chronologically ordered recent bids against the given item.
+
+6. WinnersPage
+   - Feature: Read-only visual data-table aggregating each item with its corresponding starting price and final highest bid.
+   - Feature: Identifies the 'Winner' or current 'Leader' associated with each respective auction.
+   - Feature: 'View Winner Details' action which extracts and presents detailed contact info (Name, Email, Phone, Address) for out-of-system transaction handling.
+
+7. PaymentsPage
+   - Feature (Buyer Interface): Acts as a "My Purchases" table listing all won properties, the winning bid amount, the seller's email for contact, and pending/success payment statuses.
+   - Feature (Seller Interface): Acts as a "Payment Verification" module listing successful sales alongside the buyer's email context.
+   - Feature: 'Verify Payment Done' functional button exclusively for sellers to manually confirm out-of-band payment receipts and close the status to "SUCCESS". 
+
+8. AdminPage
+   - Feature: High-level Admin Dashboard segmented into robust tabbed panes (Manage Users / Manage Items).
+   - Feature: 'Manage Users' Tab: Iterates through the entire system database returning every registered user (Name, Email, Role, Phone) in a data table.
+   - Feature: 'Manage Items' Tab: Iterates through every listed item globally (Starting Price, Status, Seller ID) granting the admin a 'Delete Selected Item' power.
+   - Feature: Snapshot Metrics showcasing 'Total Users', 'Total Items', and 'Total Auction Value' calculated actively from database entries.
+
+=========================================
+2. USERS, ROLES, AND THEIR PROPERTIES
+=========================================
+
+Roles:
+- BUYER: Responsible for browsing available properties, estimating values, actively placing bids against other users, tracking won auctions, and managing completed purchase histories.
+- SELLER: Responsible for initializing auctions, uploading detailed item descriptions to the market, tracking bidding velocity on self-listed properties, managing items, and updating successful transactions directly.
+- ADMIN: High-level authority responsible for moderation. Features absolute visibility over total user engagements, the capacity to view global items, revoke access to malicious/invalid items by force-deleting, and assess monetary metrics scaling across the entire Digital Auction System schema.
+
+User Properties:
+- id (Integer): Primary key and unique database identifier for the user.
+- name (String): The legal identifying name of the individual or entity.
+- email (String): Main method of login authentication; must be unique to the database schema.
+- password (String): Authentication validation credential.
+- phone (String): Formatted contact number accessible mainly by administrators or involved transacting counterparts via the Winners/Payments screens. 
+- address (String): Billing/shipping identifier provided.
+- role (String): Bounded string defining access privileges strictly checking into either 'ADMIN', 'SELLER', or 'BUYER'.
+- rating (Double): A configurable numerical reputation matrix representation (Defaulting to 0.0).
+- isLoggedIn (Boolean): Runtime state toggle determining if the given User entity holds an active UI session.
